@@ -25,7 +25,12 @@ wss.on('connection', (ws) => {
     try {
       const json = JSON.parse(data);
       const { error } = await supabase.from('sensor_data').insert([
-        { sensor: json.sensor, value: json.value }
+        {
+          temperature: json.temperature,
+          humidity: json.humidity,
+          light_level: json.light_level,
+          plant_id: json.plant_id
+        }
       ]);
       if (error) console.error('❌ Supabase 저장 실패:', error.message);
       else console.log('✅ Supabase 저장 성공');
