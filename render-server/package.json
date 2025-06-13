@@ -1,0 +1,13 @@
+{
+  "name": "render-websocket-server",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "ws": "^8.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
