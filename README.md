@@ -1,4 +1,4 @@
-✅ 프로젝트 구성 개요
+### ✅ 프로젝트 구성 개요
 📦 GitHub 레포지토리: nerdycatcher_socket_server <br>
 🧭 Render: 중계 서버 (중간에서 데이터를 WSS 서버로 전달) <br>
 🚉 Railway: WebSocket(WSS) 서버 (ESP32에서 연결되는 대상) <br>
