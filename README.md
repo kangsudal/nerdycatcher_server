@@ -4,7 +4,7 @@
 	•	🚉 Railway: WebSocket(WSS) 서버 (ESP32에서 연결되는 대상)
 	•	🗃 Supabase: 데이터 저장소 (중계 서버에서 Supabase로 저장)
 
-
+```
 nerdycatcher_socket_server/
 ├── socket-server/         # Railway (wss 서버)
 │   ├── index.js
@@ -14,3 +14,4 @@ nerdycatcher_socket_server/
     ├── index.js
     ├── package.json
     └── ... 
+```
