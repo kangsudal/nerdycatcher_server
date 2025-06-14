@@ -11,16 +11,16 @@ ESP32는 보안 웹소켓(WSS)을 통해 Render에 배포된 서버에 데이터
 
 ## 예시 로그
 ```
-✅ WebSocket 서버 시작됨: ws\://localhost:8080
+✅ WebSocket 서버 시작됨: ws://localhost:8080
 🤝 클라이언트 연결됨
-📨 수신된 메시지: {"temperature":25.3,"humidity":51,"light\_level":218,"plant\_id":1}
+📨 수신된 메시지: {"temperature":25.3,"humidity":51,"light_level":218,"plant_id":1}
 ✅ Supabase 저장 성공
 ```
 
 ## 환경 변수 (.env)
 ```
-SUPABASE\_URL=your\_supabase\_url
-SUPABASE\_KEY=your\_supabase\_api\_key
+SUPABASE_URL=자기의 supabase url
+SUPABASE_KEY=자기의 supabase api key
 ```
 
 ## Render 설정
@@ -29,3 +29,5 @@ SUPABASE\_KEY=your\_supabase\_api\_key
 ## 🔗 관련 저장소
 - [nerdycatcher_esp32](https://github.com/kangsudal/nerdycatcher_esp32): 센서 데이터를 측정하고 서버로 전송하는 ESP32 코드
 
+## blog
+https://blog.naver.com/kangsudal-dev/223899093772
