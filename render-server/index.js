@@ -47,6 +47,6 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    console.log('❎ 클라이언트 연결 종료');
+    console.log(`👋 클라이언트 종료됨: ${ws.clientName || '알 수 없음'}`);
   });
 });
