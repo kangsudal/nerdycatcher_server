@@ -41,6 +41,23 @@ wss.on('connection', (ws) => {
       ]);
       if (error) console.error('❌ Supabase 저장 실패:', error.message);
       else console.log('✅ Supabase 저장 성공');
+
+      // 일단은 연결된 모든 클라이언트에게 데이터 전송
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'sensor_data',
+            from: ws.clientName,
+            data: {
+              temperature: json.temperature,
+              humidity: json.humidity,
+              light_level: json.light_level,
+              plant_id: json.plant_id,
+            }
+          }));
+        }
+      });
+
     } catch (err) {
       console.error('⚠️ 메시지 파싱 오류:', err.message);
     }
