@@ -24,6 +24,13 @@ wss.on('connection', (ws) => {
 
     try {
       const json = JSON.parse(data);
+
+      if (json.type === 'identify') {
+        ws.clientName = json.name; // 클라이언트 이름 저장
+        console.log(`🔖 클라이언트 식별: ${ws.clientName}`);
+        return;
+      }
+      console.log(`${ws.clientName ?? '알 수 없음'} 으로부터 데이터 수신됨`);
       const { error } = await supabase.from('sensor_data').insert([
         {
           temperature: json.temperature,
