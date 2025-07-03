@@ -59,12 +59,12 @@ wss.on('connection', (ws) => {
       });
 
     //  온도 임계값 체크 후 '해당 식물을 구독한 그룹'에게 푸시 알림 발송
-    if (json.temperature < 200) {
+    if (json.light_level < 200) {
       console.log(`조도 임계값 미만! plant_id:${json.plant_id} 그룹에게 푸시 알림 발송 시도.`);
       await sendPushToPlantGroup(
         json.plant_id,
         '빛 세기 경고!',
-        `현재 조도 ${json.temperature} lux가 임계값보다 낮습니다.`
+        `현재 조도 ${json.light_level} lux가 임계값보다 낮습니다.`
       );
     }
 
