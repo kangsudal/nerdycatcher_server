@@ -23,3 +23,6 @@ build/
 
 # 테스트 커버리지
 coverage/
+
+# Firebase 서비스 계정 비공개 키(푸쉬메세지)
+nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json
