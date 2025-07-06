@@ -5,7 +5,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "ws": "^8.0.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "google-auth-library": "^9.0.0"
   },
   "scripts": {
     "start": "node index.js"
