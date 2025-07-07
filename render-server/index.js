@@ -205,7 +205,7 @@ async function authenticateClient(ws, json, authTimeout) {
     ws.clientType = 'device';
     clearTimeout(authTimeout);
     console.log(`✅ [기기] 인증 성공: plant_id ${ws.device.plant_id}`);
-    ws.send(JSON.stringify({ type: 'auth_success' }));
+    ws.send(JSON.stringify({ type: 'auth_success', plant_id: ws.device.plant_id, }));
     return; // 인증 처리는 여기서 끝
   }
 
