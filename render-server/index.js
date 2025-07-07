@@ -170,6 +170,7 @@ async function authenticateClient(ws, json, authTimeout) {
     const { data: { user }, error } = await supabase.auth.getUser(json.token);
     if (error || !user) {
       console.log('❌ [사용자] 유효하지 않은 토큰. 연결을 종료합니다.');
+      if (error) console.error('🔍 Supabase error:', error);
       return ws.close();
     }
     ws.isAuthenticated = true;
