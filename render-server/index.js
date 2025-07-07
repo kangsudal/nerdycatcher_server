@@ -1,3 +1,5 @@
+import express from 'express';
+import { createServer } from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
@@ -7,16 +9,21 @@ import fetch from 'node-fetch';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8080;
+const app = express();
+const server = createServer(app);
+
+const PORT = process.env.PORT || 10000;
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const wss = new WebSocketServer({ port: PORT });
+const wss = new WebSocketServer({ server });
 
-console.log(`✅ WebSocket 서버 시작됨: ws://localhost:${PORT}`);
+app.get('/', (req, res) => {
+  res.send('NerdyCatcher WebSocket + Express 서버 작동중');
+});
 
 // ------------------- 새로운 클라이언트 연결 처리 -------------------
 wss.on('connection', (ws) => {
@@ -80,6 +87,10 @@ wss.on('connection', (ws) => {
     console.log(`👋 클라이언트 종료됨: ${ws.user?.email || (ws.device ? 'plant_id ${ws.device.plant_id}' : '인증 안된 기기')}`);
     clearTimeout(authTimeout);
   });
+});
+
+server.listen(PORT, () => {
+  console.log('서버 실행 중: ${PORT}')
 });
 
 async function sendPushToPlantGroup(plantId, title, body) {
