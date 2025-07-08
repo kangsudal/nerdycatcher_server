@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 //푸쉬 알림을 위해 GoogleAuth, fetch 필요
 import { GoogleAuth } from 'google-auth-library';
 import fetch from 'node-fetch';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -121,8 +122,10 @@ async function sendPushToPlantGroup(plantId, title, body) {
   }
 
   // 2. 구글 인증은 한 번만 실행
+  const keyFilePath = '/etc/secrets/nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json';
+  const credentials = JSON.parse(fs.readFileSync(keyFilePath,'utf8'));
   const auth = new GoogleAuth({
-    keyFile: '/etc/secrets/nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json',
+    credentials,
     scopes: 'https://www.googleapis.com/auth/firebase.messaging',
   });
   const accessToken = await auth.getAccessToken();
