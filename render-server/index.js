@@ -84,7 +84,7 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    console.log(`👋 클라이언트 종료됨: ${ws.user?.email || (ws.device ? 'plant_id ${ws.device.plant_id}' : '인증 안된 기기')}`);
+    console.log(`👋 클라이언트 종료됨: ${ws.user?.email || (ws.device ? `plant_id ${ws.device.plant_id}` : `인증 안된 기기`)}`);
     clearTimeout(authTimeout);
   });
 });
@@ -122,7 +122,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
 
   // 2. 구글 인증은 한 번만 실행
   const auth = new GoogleAuth({
-    keyFile: './nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json',
+    keyFile: JSON.parse(process.env.FIREBASE_CREDENTIALS_JSON),
     scopes: 'https://www.googleapis.com/auth/firebase.messaging',
   });
   const accessToken = await auth.getAccessToken();
