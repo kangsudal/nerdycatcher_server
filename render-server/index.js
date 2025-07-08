@@ -127,6 +127,9 @@ async function sendPushToPlantGroup(plantId, title, body) {
       credentials: JSON.parse(process.env.FIREBASE_CREDENTIALS_JSON),
     },
   });
+  // 디버깅 목적으로 잠시 추가해 볼 수 있습니다.
+  console.log('GOOGLE_APPLICATION_CREDENTIALS 환경 변수:', process.env.GOOGLE_APPLICATION_CREDENTIALS ? '존재함' : '존재하지 않음');
+
   const accessToken = await auth.getAccessToken();
   const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/nerdycatcher/messages:send`;
 
