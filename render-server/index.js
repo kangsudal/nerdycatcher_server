@@ -122,10 +122,10 @@ async function sendPushToPlantGroup(plantId, title, body) {
 
   // 2. 구글 인증은 한 번만 실행
   const auth = new GoogleAuth({
+    scopes: 'https://www.googleapis.com/auth/firebase.messaging',
     clientOptions: {
       credentials: JSON.parse(process.env.FIREBASE_CREDENTIALS_JSON),
     },
-    scopes: 'https://www.googleapis.com/auth/firebase.messaging',
   });
   const accessToken = await auth.getAccessToken();
   const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/nerdycatcher/messages:send`;
