@@ -121,8 +121,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
   }
 
   // 2. 구글 인증은 한 번만 실행
-  const credentials = JSON.parse(process.env.FIREBASE_CREDENTIALS_JSON);
-
+  const credentials = JSON.parse(process.env.FIREBASE_CREDENTIALS_JSON.split(String.raw`\n`).join('\n'));
   const auth = new GoogleAuth({
     scopes: 'https://www.googleapis.com/auth/firebase.messaging',
     credentials: credentials,
