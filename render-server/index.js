@@ -96,10 +96,10 @@ server.listen(PORT, () => {
 
 async function sendPushToPlantGroup(plantId, title, body) {
   // 1. monitoring_members 테이블에서 plantId가 일치하는 모든 멤버를 찾고
-  // 그 멤버에 대응하는 public.users 테이블 정보에서 사용자의 FCM 토큰 조회
+  // 그 멤버에 대응하는 user_id 목록 조회
   const { data: members, error } = await supabase
     .from('monitoring_members')
-    .select('user_id, public.users (fcm_token)')
+    .select('user_id')
     .eq('plant_id', plantId);
 
   //members :
@@ -121,6 +121,16 @@ async function sendPushToPlantGroup(plantId, title, body) {
     return;
   }
 
+  const userIds = members.map((member) => member.user_id);
+  // users 테이블에서 각 user의 fcm_token 조회
+  const { data: users, error: usersError } = await supabase.from('users')
+    .select('id, fcm_token')
+    .in('id', userIds);
+
+  if (usersError || !users || users.length === 0) {
+    console.warn(`FCM 토큰을 가진 사용자가 없습니다.`);
+    return;
+  }
   // 2. 구글 인증은 한 번만 실행
   const keyFilePath = '/etc/secrets/nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json';
   const credentials = JSON.parse(fs.readFileSync(keyFilePath, 'utf8'));
@@ -132,50 +142,50 @@ async function sendPushToPlantGroup(plantId, title, body) {
   const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/nerdycatcher/messages:send`;
 
   // 3. 조회된 모든 사용자에게 알림 전송 (for...of 루프 사용)
-  for (const member of members) {
+  for (const user of users) {
     // member:
     //   {
     //     "users": {
     //       "fcm_token": "첫 번째 멤버의 휴대폰 주소"
     //     }
     //   },
-    const fcmToken = member.users?.fcm_token;
+    const fcmToken = user.fcm_token;
 
     console.log(`📱 FCM 토큰 확인:`, fcmToken);
     if (!fcmToken) {
-      console.warn(`⚠️ FCM 토큰 없음. member.users:`, member.users);
+      console.warn(`⚠️ 사용자 ${user.id}는 FCM 토큰이 없음. `);
       continue;
     }
-    if (fcmToken) {
-      const notificationPayload = {
-        message: {
-          token: fcmToken,
-          notification: { title, body },
+
+    const notificationPayload = {
+      message: {
+        token: fcmToken,
+        notification: { title, body },
+      },
+    };
+
+    try {
+      const res = await fetch(fcmEndpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
         },
-      };
+        body: JSON.stringify(notificationPayload),
+      });
+      const result = await res.json();
+      console.log(`📨 응답 상태: ${res.status}, 결과:`, result);
 
-      try {
-        const res = await fetch(fcmEndpoint, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(notificationPayload),
-        });
-        const result = await res.json();
-        console.log(`📨 응답 상태: ${res.status}, 결과:`, result);
-
-        if (res.ok) {
-          console.log(`✅ ${fcmToken} (으)로 푸시 전송 성공`);
-        } else {
-          //실행은 됐지만 응답이 실패했을때
-          console.error(`❌ FCM 응답 오류:`, result);
-        }
-      } catch (e) {
-        console.error(`❌ ${fcmToken} (으)로 푸시 전송 오류:`, e.message);
+      if (res.ok) {
+        console.log(`✅ ${fcmToken} (으)로 푸시 전송 성공`);
+      } else {
+        //실행은 됐지만 응답이 실패했을때
+        console.error(`❌ FCM 응답 오류:`, result);
       }
+    } catch (e) {
+      console.error(`❌ ${fcmToken} (으)로 푸시 전송 오류:`, e.message);
     }
+
   }
 }
 
