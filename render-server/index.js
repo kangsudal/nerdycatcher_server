@@ -123,7 +123,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
 
   const userIds = members.map((member) => member.user_id);
   // users 테이블에서 각 user의 fcm_token 조회
-  const { data: users, error: usersError } = await supabase.from('users')
+  const { data: users, error: usersError } = await supabase.from('public.users')
     .select('id, fcm_token')
     .in('id', userIds);
 
