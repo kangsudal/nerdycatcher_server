@@ -96,41 +96,44 @@ server.listen(PORT, () => {
 
 async function sendPushToPlantGroup(plantId, title, body) {
   // 1. monitoring_members 테이블에서 plantId가 일치하는 모든 멤버를 찾고
-  // 그 멤버에 대응하는 user_id 목록 조회
+  //    그 멤버에 대응하는 user_id 목록과 fcm_token 조회
   const { data: members, error } = await supabase
     .from('monitoring_members')
-    .select('user_id')
+    .select('user_id, users(fcm_token)') // user_id와 조인된 users 테이블의 fcm_token을 가져옴
     .eq('plant_id', plantId);
-  console.log("members 구조 확인:", JSON.stringify(members, null, 2));
-  //members :
+
+  //console.log("members 구조 확인 (수정 후):", JSON.stringify(members, null, 2));
+  // 예상되는 members 구조:
   // [
   //   {
+  //     "user_id": "uuid1",
   //     "users": {
-  //       "fcm_token": "첫 번째 멤버의 휴대폰 주소"
+  //       "fcm_token": "token1"
   //     }
   //   },
   //   {
+  //     "user_id": "uuid2",
   //     "users": {
-  //       "fcm_token": "두 번째 멤버의 휴대폰 주소"
+  //       "fcm_token": "token2"
   //     }
   //   }
   // ]
 
   if (error || !members || members.length === 0) {
-    console.warn(`⚠️ plant_id:${plantId}에 대한 사용자를 찾을 수 없습니다.`);
+    console.warn(`⚠️ plant_id:${plantId}에 대한 사용자를 찾을 수 없습니다:`, error?.message || '멤버 없음');
     return;
   }
 
-  const userIds = members.map((member) => member.user_id);
-  // users 테이블에서 각 user의 fcm_token 조회
-  const { data: users, error: usersError } = await supabase.from('public.users')
-    .select('id, fcm_token')
-    .in('id', userIds);
+  // 이제 members 배열에서 직접 fcm_token을 추출합니다.
+  const fcmTokensToSend = members
+    .filter(member => member.users && member.users.fcm_token) // fcm_token이 있는 멤버만 필터링
+    .map(member => member.users.fcm_token);
 
-  if (usersError || !users || users.length === 0) {
+  if (fcmTokensToSend.length === 0) {
     console.warn(`FCM 토큰을 가진 사용자가 없습니다.`);
     return;
   }
+
   // 2. 구글 인증은 한 번만 실행
   const keyFilePath = '/etc/secrets/nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json';
   const credentials = JSON.parse(fs.readFileSync(keyFilePath, 'utf8'));
@@ -142,20 +145,8 @@ async function sendPushToPlantGroup(plantId, title, body) {
   const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/nerdycatcher/messages:send`;
 
   // 3. 조회된 모든 사용자에게 알림 전송 (for...of 루프 사용)
-  for (const user of users) {
-    // member:
-    //   {
-    //     "users": {
-    //       "fcm_token": "첫 번째 멤버의 휴대폰 주소"
-    //     }
-    //   },
-    const fcmToken = user.fcm_token;
-
+  for (const fcmToken of fcmTokensToSend) { // fcmTokensToSend 배열을 순회
     console.log(`📱 FCM 토큰 확인:`, fcmToken);
-    if (!fcmToken) {
-      console.warn(`⚠️ 사용자 ${user.id}는 FCM 토큰이 없음. `);
-      continue;
-    }
 
     const notificationPayload = {
       message: {
@@ -185,7 +176,6 @@ async function sendPushToPlantGroup(plantId, title, body) {
     } catch (e) {
       console.error(`❌ ${fcmToken} (으)로 푸시 전송 오류:`, e.message);
     }
-
   }
 }
 
