@@ -101,7 +101,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
     .from('monitoring_members')
     .select('user_id, user(fcm_token)')
     .eq('plant_id', plantId);
-
+  console.log("members 구조 확인:", JSON.stringify(members, null, 2));
   //members :
   // [
   //   {
