@@ -123,7 +123,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
 
   // 2. 구글 인증은 한 번만 실행
   const keyFilePath = '/etc/secrets/nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json';
-  const credentials = JSON.parse(fs.readFileSync(keyFilePath,'utf8'));
+  const credentials = JSON.parse(fs.readFileSync(keyFilePath, 'utf8'));
   const auth = new GoogleAuth({
     credentials,
     scopes: 'https://www.googleapis.com/auth/firebase.messaging',
@@ -140,6 +140,12 @@ async function sendPushToPlantGroup(plantId, title, body) {
     //     }
     //   },
     const fcmToken = member.users?.fcm_token;
+
+    console.log(`📱 FCM 토큰 확인:`, fcmToken);
+    if (!fcmToken) {
+      console.warn(`⚠️ FCM 토큰 없음. member.users:`, member.users);
+      continue;
+    }
     if (fcmToken) {
       const notificationPayload = {
         message: {
@@ -149,7 +155,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
       };
 
       try {
-        await fetch(fcmEndpoint, {
+        const res = await fetch(fcmEndpoint, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -157,7 +163,15 @@ async function sendPushToPlantGroup(plantId, title, body) {
           },
           body: JSON.stringify(notificationPayload),
         });
-        console.log(`✅ ${fcmToken} (으)로 푸시 전송 성공`);
+        const result = await res.json();
+        console.log(`📨 응답 상태: ${res.status}, 결과:`, result);
+
+        if (res.ok) {
+          console.log(`✅ ${fcmToken} (으)로 푸시 전송 성공`);
+        } else {
+          //실행은 됐지만 응답이 실패했을때
+          console.error(`❌ FCM 응답 오류:`, result);
+        }
       } catch (e) {
         console.error(`❌ ${fcmToken} (으)로 푸시 전송 오류:`, e.message);
       }
