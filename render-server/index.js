@@ -99,7 +99,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
   // 그 멤버에 대응하는 user_id 목록 조회
   const { data: members, error } = await supabase
     .from('monitoring_members')
-    .select('user_id, user(fcm_token)')
+    .select('user_id')
     .eq('plant_id', plantId);
   console.log("members 구조 확인:", JSON.stringify(members, null, 2));
   //members :
