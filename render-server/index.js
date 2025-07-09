@@ -130,7 +130,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
     console.warn(`FCM 토큰을 가진 사용자가 없습니다.`);
     return;
   }
-  
+
   // 2. 구글 인증은 한 번만 실행
   const keyFilePath = '/etc/secrets/nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json';
   const credentials = JSON.parse(fs.readFileSync(keyFilePath, 'utf8'));
@@ -142,18 +142,17 @@ async function sendPushToPlantGroup(plantId, title, body) {
   const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/nerdycatcher/messages:send`;
 
   // 3. 조회된 모든 사용자에게 알림 전송 (for...of 루프 사용)
-  for (const user of users) {
+  for (const fcmToken of tokens) {
     // member:
     //   {
     //     "users": {
     //       "fcm_token": "첫 번째 멤버의 휴대폰 주소"
     //     }
     //   },
-    const fcmToken = user.fcm_token;
 
     console.log(`📱 FCM 토큰 확인:`, fcmToken);
     if (!fcmToken) {
-      console.warn(`⚠️ 사용자 ${user.id}는 FCM 토큰이 없음. `);
+      console.warn(`FCM 토큰이 없음. `);
       continue;
     }
 
