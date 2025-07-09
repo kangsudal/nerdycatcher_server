@@ -99,7 +99,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
   // 그 멤버에 대응하는 public.users 테이블 정보에서 사용자의 FCM 토큰 조회
   const { data: members, error } = await supabase
     .from('monitoring_members')
-    .select('users (fcm_token)')
+    .select('user_id, public.users (fcm_token)')
     .eq('plant_id', plantId);
 
   //members :
