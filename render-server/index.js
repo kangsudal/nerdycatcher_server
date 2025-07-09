@@ -121,16 +121,16 @@ async function sendPushToPlantGroup(plantId, title, body) {
     return;
   }
 
-  const userIds = members.map((member) => member.user_id);
-  // users 테이블에서 각 user의 fcm_token 조회
-  const { data: users, error: usersError } = await supabase.from('public.users')
-    .select('id, fcm_token')
-    .in('id', userIds);
+  // members 배열에서 바로 fcm_token 추출
+  const tokens = members
+    .map((member) => member.users?.fcm_token)
+    .filter((token) => token); // null이나 undefined 토큰 제거
 
-  if (usersError || !users || users.length === 0) {
+  if (tokens.length === 0) {
     console.warn(`FCM 토큰을 가진 사용자가 없습니다.`);
     return;
   }
+  
   // 2. 구글 인증은 한 번만 실행
   const keyFilePath = '/etc/secrets/nerdycatcher-firebase-adminsdk-fbsvc-5e1eeecd7c.json';
   const credentials = JSON.parse(fs.readFileSync(keyFilePath, 'utf8'));
