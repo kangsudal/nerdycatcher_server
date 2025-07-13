@@ -184,7 +184,15 @@ async function sendPushToPlantGroup(plantId, title, body) {
         console.log(`✅ ${fcmToken} (으)로 푸시 전송 성공`);
       } else {
         //실행은 됐지만 응답이 실패했을때
-        console.error(`❌ FCM 응답 오류:`, result);
+        console.error(`❌ FCM 응답 오류:`, JSON.stringify(result, null, 2));
+
+        if (result?.error?.details) {
+          result.error.details.forEach((detail, idx) => {
+            console.log(`🔍 [${idx}] 오류 코드: ${detail.errorCode}`);
+            console.log(`🔍 [${idx}] 메시지: ${detail.message}`);
+            console.log(`🔍 [${idx}] 전체:`, JSON.stringify(detail, null, 2));
+          });
+        }
       }
     } catch (e) {
       console.error(`❌ ${fcmToken} (으)로 푸시 전송 오류:`, e.message);
