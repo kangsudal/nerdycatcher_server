@@ -22,7 +22,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const wss = new WebSocketServer({ server });
 
-const lastIssuePushMap = new Map<string, number>();
+const lastIssuePushMap = new Map();
 
 app.get('/', (req, res) => {
   res.send('NerdyCatcher WebSocket + Express 서버 작동중');
