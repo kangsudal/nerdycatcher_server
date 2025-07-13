@@ -163,7 +163,7 @@ async function sendPushToPlantGroup(plantId, title, body) {
         data: {
           // 해당 식물의 대쉬보드 페이지로 이동
           "deeplink": "/dashboard",
-          "plant_id": plantId.toString(),
+          "plantId": plantId.toString(),
         }
       },
     };
