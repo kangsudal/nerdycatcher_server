@@ -194,13 +194,19 @@ async function sendPushToPlantGroup(plantId, title, body) {
           });
         }
 
-        if (res.status === 404 && result.error?.details?.[0]?.errorCode === 'UNREGISTERED') {
-          console.warn(`Supabase에서 이 토큰 삭제: ${fcmToken}`);
-          await supabase
-            .from('users')
-            .update({ fcm_token: null })
-            .eq('fcm_token', fcmToken);
-          continue; //전체 푸시 루프가 중단되지 않고 다음으로 넘어가도록
+        console.log(`(res.status === 404 && result.error?.details?.[0]?.errorCode === 'UNREGISTERED'):${(res.status === 404 && result.error?.details?.[0]?.errorCode === 'UNREGISTERED')}`);
+        console.log(`result.error?.details?.[0]?.errorCode):${result.error?.details?.[0]?.errorCode}`);
+        try {
+          if (res.status === 404 && result.error?.details?.[0]?.errorCode === 'UNREGISTERED') {
+            console.warn(`Supabase에서 이 토큰 삭제: ${fcmToken}`);
+            await supabase
+              .from('users')
+              .update({ fcm_token: null })
+              .eq('fcm_token', fcmToken);
+            continue; //전체 푸시 루프가 중단되지 않고 다음으로 넘어가도록
+          }
+        } catch (e) {
+          console.log(`실패했음! : ${e}`);
         }
       }
     } catch (e) {
