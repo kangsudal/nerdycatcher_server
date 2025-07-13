@@ -22,6 +22,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const wss = new WebSocketServer({ server });
 
+const lastIssuePushMap = new Map<string, number>();
+
 app.get('/', (req, res) => {
   res.send('NerdyCatcher WebSocket + Express 서버 작동중');
 });
@@ -91,7 +93,7 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(PORT, () => {
-  console.log('서버 실행 중: ${PORT}')
+  console.log(`서버 실행 중: ${PORT}`)
 });
 
 async function sendPushToPlantGroup(plantId, title, body) {
@@ -342,62 +344,68 @@ async function fetchPlant(plantId) {
 }
 
 // 모든 임계값을 확인하고 필요 시 푸시 알림을 보내는 함수
+// 문제별 푸시 시간 제한 기록용 Map
 async function checkAndSendPushNotification(sensorJson, plant) {
-  // threshold_settings 객체가 없으면 아무것도 하지 않고 종료
   if (!plant.threshold_settings) return;
 
-
   const thresholdSettings = plant.threshold_settings;
+  const now = Date.now();
 
-  // --- 온도 확인 (최저/최고) ---
+  // 문제 발생시 푸시 보내되, 30초 제한
+  async function sendPushWithThrottle(issueKey, title, body) {
+    const lastSent = lastIssuePushMap.get(issueKey) || 0;
+    if (now - lastSent >= 30_000) { // 30초
+      lastIssuePushMap.set(issueKey, now);
+      console.log(`[푸시 전송] ${issueKey}`);
+      await sendPushToPlantGroup(plant.id, title, body);
+    } else {
+      console.log(`[푸시 생략] ${issueKey}는 최근 ${Math.floor((now - lastSent)/1000)}초 전에 전송됨`);
+    }
+  }
+
+  // --- 온도 확인 ---
   if (thresholdSettings.temperature_min && sensorJson.temperature < thresholdSettings.temperature_min) {
-    console.log(`[Push Check] 저온 임계값 체크중입니다. plant ID: ${plant.id} / plant name: ${plant.name}을 구독하는 그룹에게 푸시 알림 발송 시도.`);
-    await sendPushToPlantGroup(
-      plant.id,
+    await sendPushWithThrottle(
+      `low_temp_${plant.id}`,
       `🌡️ ${plant.name} 저온 경고!`,
       `현재 온도 ${sensorJson.temperature}°C가 설정값(${thresholdSettings.temperature_min}°C)보다 낮습니다.`
     );
   }
   if (thresholdSettings.temperature_max && sensorJson.temperature > thresholdSettings.temperature_max) {
-    console.log(`[Push Check] 고온 임계값 체크중입니다. plant ID: ${plant.id} / plant name: ${plant.name}을 구독하는 그룹에게 푸시 알림 발송 시도.`);
-    await sendPushToPlantGroup(
-      plant.id,
+    await sendPushWithThrottle(
+      `high_temp_${plant.id}`,
       `🌡️ ${plant.name} 고온 경고!`,
       `현재 온도 ${sensorJson.temperature}°C가 설정값(${thresholdSettings.temperature_max}°C)보다 높습니다.`
     );
   }
 
-  // --- 습도 확인 (최저/최고) ---
+  // --- 습도 확인 ---
   if (thresholdSettings.humidity_min && sensorJson.humidity < thresholdSettings.humidity_min) {
-    console.log(`[Push Check] 건조 임계값 체크중입니다. plant ID: ${plant.id} / plant name: ${plant.name}을 구독하는 그룹에게 푸시 알림 발송 시도.`);
-    await sendPushToPlantGroup(
-      plant.id,
+    await sendPushWithThrottle(
+      `low_humidity_${plant.id}`,
       `💧 ${plant.name} 건조 경고!`,
       `현재 습도 ${sensorJson.humidity}%가 설정값(${thresholdSettings.humidity_min}%)보다 낮습니다.`
     );
   }
   if (thresholdSettings.humidity_max && sensorJson.humidity > thresholdSettings.humidity_max) {
-    console.log(`[Push Check] 과습 임계값 체크중입니다. plant ID: ${plant.id} / plant name: ${plant.name}을 구독하는 그룹에게 푸시 알림 발송 시도.`);
-    await sendPushToPlantGroup(
-      plant.id,
+    await sendPushWithThrottle(
+      `high_humidity_${plant.id}`,
       `💧 ${plant.name} 과습 경고!`,
       `현재 습도 ${sensorJson.humidity}%가 설정값(${thresholdSettings.humidity_max}%)보다 높습니다.`
     );
   }
 
-  // --- 조도 확인 (최저/최고) ---
+  // --- 조도 확인 ---
   if (thresholdSettings.light_min && sensorJson.light_level < thresholdSettings.light_min) {
-    console.log(`[Push Check] 빛 부족 임계값 체크중입니다. plant ID: ${plant.id} / plant name: ${plant.name}을 구독하는 그룹에게 푸시 알림 발송 시도.`);
-    await sendPushToPlantGroup(
-      plant.id,
+    await sendPushWithThrottle(
+      `low_light_${plant.id}`,
       `☀️ ${plant.name} 빛 부족 경고!`,
       `현재 조도 ${sensorJson.light_level} lux가 설정값(${thresholdSettings.light_min} lux)보다 낮습니다.`
     );
   }
   if (thresholdSettings.light_max && sensorJson.light_level > thresholdSettings.light_max) {
-    console.log(`[Push Check] 빛 과다 임계값 체크중입니다. plant ID: ${plant.id} / plant name: ${plant.name}을 구독하는 그룹에게 푸시 알림 발송 시도.`);
-    await sendPushToPlantGroup(
-      plant.id,
+    await sendPushWithThrottle(
+      `high_light_${plant.id}`,
       `☀️ ${plant.name} 빛 과다 경고!`,
       `현재 조도 ${sensorJson.light_level} lux가 설정값(${thresholdSettings.light_max} lux)보다 높습니다.`
     );
