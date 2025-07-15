@@ -81,6 +81,22 @@ wss.on('connection', (ws) => {
           }
         }
       }
+
+      if (ws.clientType === 'user' && json.type === 'led_control') {
+        const plantId = json.plant_id;       // Flutter에서 plantId를 포함해야 함
+        const state = json.state;            // 'on' 또는 'off'
+        console.log(`💡 LED 제어 요청: plant_id=${plantId}, state=${state}`);
+
+        // 해당 plantId를 가진 기기를 찾아서 제어 메시지를 전달
+        wss.clients.forEach(client => {
+          if (client.clientType === 'device'
+            && client.isAuthenticated
+            && client.device.plant_id === plantId) {
+            client.send(JSON.stringify({ type: 'led_control', state }));
+          }
+        });
+        return;
+      }
     } catch (err) {
       console.error('⚠️ 메시지 처리 오류:', err.message);
     }
@@ -359,7 +375,7 @@ async function checkAndSendPushNotification(sensorJson, plant) {
       console.log(`[푸시 전송] ${issueKey}`);
       await sendPushToPlantGroup(plant.id, title, body);
     } else {
-      console.log(`[푸시 생략] ${issueKey}는 최근 ${Math.floor((now - lastSent)/1000)}초 전에 전송됨`);
+      console.log(`[푸시 생략] ${issueKey}는 최근 ${Math.floor((now - lastSent) / 1000)}초 전에 전송됨`);
     }
   }
 
