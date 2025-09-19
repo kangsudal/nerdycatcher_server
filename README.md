@@ -31,27 +31,28 @@ WebSocket 기반 API와 인증 구조를 직접 설계·구현한 경험이 있�
 ```json
 {
   "type": "sensor_data",
-  "deviceId": "device-123",
   "temperature": 25.7,
   "humidity": 62,
-  "timestamp": "2025-09-19T10:15:00Z"
+  "light_level": 80,
+  "plant_id": "plant_id_123"
 }
 ```
 #### 3. 제어 메시지 (Flutter 앱 → Render 서버 → ESP32)
 ```json
 {
-  "type": "control",
-  "deviceId": "device-123",
-  "command": "LED_ON"
+  "type": "led_control",
+  "plant_id": "plant_id-123",
+  "state": "on"
 }
 ```
 
 #### 4. 알림 트리거 (Render 서버 → FCM)
-```json
-{
-  "title": "온도 경고",
-  "body": "Device-123의 온도가 30℃를 초과했습니다."
-}
+```
+await sendPushWithThrottle(
+      `low_temp_${plant.id}`,
+      `🌡️ ${plant.name} 저온 경고!`,
+      `현재 온도 ${sensorJson.temperature}°C가 설정값(${thresholdSettings.temperature_min}°C)보다 낮습니다.`
+    )
 ```
 
 ### 인증 구조를 넣은 이유
